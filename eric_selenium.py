@@ -3,31 +3,40 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 
-# Instanciamos un driver
-driver = webdriver.Firefox()
+# Función que busca el precio de un libro en Agapea
+def buscar_precio_libro(isbn):
 
-# Maximizamos la ventana
-driver.maximize_window()
+    # Instanciamos un driver
+    driver = webdriver.Firefox()
 
-# Abre la página de Amazon
-driver.get("https://www.amazon.es/s?k=9788418928949")
+    # Maximizamos la ventana
+    driver.maximize_window()
 
-# Espera a que la página cargue
-time.sleep(5)
+    # Abre la página de Agapea
+    driver.get(f"https://www.agapea.com/poesies-{isbn}-i.htm")
 
-# Clickamos al botón para aceptar las cookies
-driver.find_element(By.XPATH, "//*[@id='sp-cc-accept']").click()
+    # Espera a que la página cargue
+    time.sleep(4)
 
-# Espera a que se vea todo
-time.sleep(5)
+    # Aceptamos las cookies
+    driver.find_element(By.XPATH, "//button[normalize-space()='Aceptar cookies']").click()
+    
+    # Espera a que la página cargue
+    time.sleep(4)
 
-# Agafem el href del llibre
-enlace_producto = driver.find_elements(By.XPATH, "//a[@class='a-link-normal s-underline-text s-underline-link-text s-link-style a-text-normal']")[0].get_attribute('href')
+    # Obtenemos el nombre
+    nombre_producto = driver.find_element(By.XPATH, "//div[@class='datos-libro']/div/h1").text
 
-# Obtenemos el precio
-precio_producto = driver.find_elements(By.XPATH, "//span[@class='a-offscreen']")[0].get_attribute('innerHTML').replace("&nbsp;", "")
-print(f'El enlace del producto es: {enlace_producto}')
-print(f'El precio del producto és: {precio_producto}')
+    # Obtenemos el precio
+    precio_producto = driver.find_element(By.XPATH, "//strong[1]").text
 
-# Cerramos el navegador
-driver.quit()
+    print(f"El nombre del producto es: {nombre_producto}")
+    print(f"El precio del producto és: {precio_producto}")
+
+    # Cerramos el navegador
+    driver.quit()
+
+
+# Uso de la función con un ISBN específico
+isbn = "9788418928949"
+buscar_precio_libro(isbn)
