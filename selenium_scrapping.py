@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
+import requests
 
 page = "llardelllibre"
 
@@ -61,27 +62,42 @@ def buscar_precio_libro(isbn):
         isbn13 = isbn
 
         # Obtenim l'element de les existencias
-        existencias = 'no available' if driver.find_element(By.XPATH, "//dd[@class='disponibilidad orange']").text == "Sense estoc, consultar termini entrega" else 'available'
-
+        existencias = True if driver.find_element(By.XPATH, "//dd[contains(text(), 'Disponibilitat')]").get_attribute("class") == "disponibilidad green" else False
+        existencias_text = "Disponible" if existencias else "No Disponible"
+    
     # Creem un diccionari amb la informació
     infoLlibre = {  
         "EAN13": isbn13,
         "ecommerce": page,
         "name" : nombre_producto,
-        "status": existencias,
-        "price": None if existencias == 'no available' else precio_producto
+        "status": existencias_text,
+        "price": None if existencias_text == 0.0 else precio_producto
     }
-
-    # Imprimim
-    print(infoLlibre)
 
     # Tanquem el navegador
     driver.quit()
-
+    
+    # Imprimim
+    return infoLlibre
+    
+def upload_data_api(isbn):
+    book = buscar_precio_libro(isbn)
+    print(book)
+    url = "https://bookpricetracker.risusapp.com/api/bookPriceUpdate"
+    params = {'EAN13':book['EAN13'],
+              'ecommerce':book['ecommerce'],
+              'status':book['status'],
+              'price':book['price']
+              }
+    
+    response = requests.post(url,json=params)
+    if response.status_code == 200:
+        print("La solicitud fue exitosa.")
+    else:
+        print("Ocurrió un error en la solicitud.")
+        print("Código de estado:", response.status_code)
+        print("Mensaje de error:", response.text)  # Imprimimos el mensaje de error si hay alguno
 
 # Ús de la funció amb un ISBN específic
 isbn = "9788418928949"
-isbn2 = "9788482649498"
-buscar_precio_libro(isbn)
-# print("-------------------------------------------------")
-# buscar_precio_libro(isbn2)
+upload_data_api(isbn)
